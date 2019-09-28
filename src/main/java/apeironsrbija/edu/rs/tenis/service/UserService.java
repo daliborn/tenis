@@ -3,8 +3,10 @@ package apeironsrbija.edu.rs.tenis.service;
 import apeironsrbija.edu.rs.tenis.config.Constants;
 import apeironsrbija.edu.rs.tenis.domain.Authority;
 import apeironsrbija.edu.rs.tenis.domain.User;
+import apeironsrbija.edu.rs.tenis.domain.UserExtra;
 import apeironsrbija.edu.rs.tenis.repository.AuthorityRepository;
 import apeironsrbija.edu.rs.tenis.repository.PersistentTokenRepository;
+import apeironsrbija.edu.rs.tenis.repository.UserExtraRepository;
 import apeironsrbija.edu.rs.tenis.repository.UserRepository;
 import apeironsrbija.edu.rs.tenis.security.AuthoritiesConstants;
 import apeironsrbija.edu.rs.tenis.security.SecurityUtils;
@@ -43,11 +45,14 @@ public class UserService {
 
     private final AuthorityRepository authorityRepository;
 
-    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, PersistentTokenRepository persistentTokenRepository, AuthorityRepository authorityRepository) {
+    private final UserExtraRepository userExtraRepository;
+
+    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, PersistentTokenRepository persistentTokenRepository, AuthorityRepository authorityRepository, UserExtraRepository userExtraRepository) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.persistentTokenRepository = persistentTokenRepository;
         this.authorityRepository = authorityRepository;
+        this.userExtraRepository = userExtraRepository;
     }
 
     public Optional<User> activateRegistration(String key) {
@@ -84,7 +89,7 @@ public class UserService {
             });
     }
 
-    public User registerUser(UserDTO userDTO, String password) {
+    public User registerUser(UserDTO userDTO, String password, String country) {
         userRepository.findOneByLogin(userDTO.getLogin().toLowerCase()).ifPresent(existingUser -> {
             boolean removed = removeNonActivatedUser(existingUser);
             if (!removed) {
@@ -116,6 +121,14 @@ public class UserService {
         newUser.setAuthorities(authorities);
         userRepository.save(newUser);
         log.debug("Created Information for User: {}", newUser);
+
+        // Create and save the UserExtra entity
+        UserExtra newUserExtra = new UserExtra();
+        newUserExtra.setUser(newUser);
+        newUserExtra.setCountry(country);
+        userExtraRepository.save(newUserExtra);
+        log.debug("Created Information for UserExtra: {}", newUserExtra);
+
         return newUser;
     }
 
