@@ -1,0 +1,14 @@
+
+entity TenisMatch {
+  playerOne String required unique,
+  playerTwo String required unique,
+  result String required
+}
+entity UserExtra {
+  country String required
+}
+relationship OneToOne {
+  UserExtra{user(login) required} to User with jpaDerivedIdentifier
+}
+
+service TenisMatch, UserExtra with serviceImpl
